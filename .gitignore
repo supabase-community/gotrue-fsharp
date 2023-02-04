@@ -1,0 +1,26 @@
+# GoTrue
+src/GoTrue/bin
+src/GoTrue/obj
+src/GoTrue/.idea
+src/GoTrue/*.DotSettings.user
+
+# GoTrueExample
+src/GoTrueExample/bin
+src/GoTrueExample/obj
+src/GoTrueExample/.idea
+src/GoTrueExample/*.DotSettings.user
+
+# vscode
+.vscode
+
+# idea
+.idea
+
+# .ionide
+.ionide
+.fake
+
+# MacOS
+.DS_Store
+
+*.DotSettings.user
