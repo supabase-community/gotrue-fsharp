@@ -45,9 +45,6 @@ module Client =
         provider: string option
         url: string option
         user: User option
-        // [<JsonField("status_code")>]
-        // statusCode: int option
-        // error: string option 
     }
     
     type AuthOptions = {
@@ -59,11 +56,11 @@ module Client =
         member this.Bind(m, f) = Option.bind f m
         member this.Return(x) = Some x
 
-    let maybe = new MaybeBuilder()
+    let maybe = MaybeBuilder()
     
-    let private signUp (body: Map<string, Object>) (urlParams: string list)
-                       (authOptions: AuthOptions option) (httpClient: HttpClient)
-                       (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
+    let private performAuthRequest<'T> (body: Map<string, Object>) (urlParams: string list) (pathSuffix: string)
+                            (authOptions: AuthOptions option) (httpClient: HttpClient) (connection: GoTrueConnection)
+                            (deserializeWith: Result<HttpResponseMessage, AuthError> -> Result<'T, AuthError>): Result<'T, AuthError> =
         let content = new StringContent(Json.serialize(body), Encoding.UTF8, "application/json")
         let redirectTo =
             maybe {
@@ -76,35 +73,27 @@ module Client =
             | Some redirectUrl -> redirectUrl :: urlParams
             | None   -> urlParams
         let queryString = if updatedUrlParams.IsEmpty then "" else "?" + (updatedUrlParams |> String.concat "&")
-        let response = connection |> post $"{connection.Url}/signup{queryString}" content httpClient
-        response |> deserializeResponse<GoTrueSessionResponse>
+        let response = connection |> post $"{connection.Url}/{pathSuffix}{queryString}" content httpClient
+        response |> deserializeWith
+    
+    let private signUp<'T> (body: Map<string, Object>) (urlParams: string list) (authOptions: AuthOptions option)
+                       (httpClient: HttpClient) (connection: GoTrueConnection)
+                       (deserializeWith: Result<HttpResponseMessage, AuthError> -> Result<'T, AuthError>): Result<'T, AuthError> =
+        deserializeWith |> performAuthRequest body urlParams "signup" authOptions httpClient connection
         
-    let private signIn (body: Map<string, Object>) (urlParams: string list)
-                       (authOptions: AuthOptions option) (httpClient: HttpClient)
-                       (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
-        let content = new StringContent(Json.serialize(body), Encoding.UTF8, "application/json")
-        let redirectTo =
-            maybe {
-                let! ao = authOptions
-                let! s = ao.redirectTo
-                return s
-            }
-        let updatedUrlParams =
-            match redirectTo with
-            | Some redirectUrl -> redirectUrl :: urlParams
-            | None   -> urlParams
-        let queryString = if updatedUrlParams.IsEmpty then "" else "?" + (updatedUrlParams |> String.concat "&")
-        let response = connection |> post $"{connection.Url}/token{queryString}" content httpClient
-        response |> deserializeResponse<GoTrueSessionResponse>
+    let private signIn<'T> (body: Map<string, Object>) (urlParams: string list) (pathSuffix: string)
+                           (authOptions: AuthOptions option) (httpClient: HttpClient) (connection: GoTrueConnection)
+                           (deserializeWith: Result<HttpResponseMessage, AuthError> -> Result<'T, AuthError>): Result<'T, AuthError> =
+        deserializeWith |> performAuthRequest body urlParams pathSuffix authOptions httpClient connection
         
-    let signUpWithEmail (email: string) (password: string)
-                        (authOptions: AuthOptions option) (connection: GoTrueConnection) =
+    let signUpWithEmail (email: string) (password: string) (authOptions: AuthOptions option)
+                        (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
         let httpClient = new HttpClient()
         let body = Map<string, Object>[
             "email", email
             "password", password
         ]
-        connection |> signUp body [] authOptions httpClient
+        deserializeResponse |> signUp body [] authOptions httpClient connection
         
     let signUpWithPhone (phone: string) (password: string) (authOptions: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
@@ -113,7 +102,7 @@ module Client =
             "phone", phone
             "password", password
         ]
-        connection |> signUp body [] authOptions httpClient
+        deserializeResponse |> signUp body [] authOptions httpClient connection
         
     let signInWithEmail (email: string) (password: string) (authOptions: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
@@ -122,7 +111,7 @@ module Client =
             "email", email
             "password", password
         ]
-        connection |> signIn body ["grant_type=password"] authOptions httpClient
+        deserializeResponse |> signIn body ["grant_type=password"] "token" authOptions httpClient connection
         
     let signInWithPhone (phone: string) (password: string) (authOptions: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
@@ -131,7 +120,7 @@ module Client =
             "phone", phone
             "password", password
         ]
-        connection |> signIn body ["grant_type=password"] authOptions httpClient
+        deserializeResponse |> signIn body ["grant_type=password"] "token" authOptions httpClient connection
         
     let signInWithMagicLink (email: string) (authOptions: AuthOptions option)
                             (connection: GoTrueConnection): Result<unit, AuthError> =
@@ -139,18 +128,4 @@ module Client =
         let body = Map<string, Object>[
             "email", email
         ]
-        let urlParams = []
-        let content = new StringContent(Json.serialize(body), Encoding.UTF8, "application/json")
-        let redirectTo =
-            maybe {
-                let! ao = authOptions
-                let! s = ao.redirectTo
-                return s
-            }
-        let updatedUrlParams =
-            match redirectTo with
-            | Some redirectUrl -> redirectUrl :: urlParams
-            | None   -> urlParams
-        let queryString = if updatedUrlParams.IsEmpty then "" else "?" + (updatedUrlParams |> String.concat "&")
-        let response = connection |> post $"{connection.Url}/magiclink{queryString}" content httpClient
-        response |> deserializeEmptyResponse
+        deserializeEmptyResponse |> signIn body [] "magiclink" authOptions httpClient connection

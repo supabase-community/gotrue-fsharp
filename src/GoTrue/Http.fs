@@ -23,15 +23,13 @@ module Http =
         | Ok r    -> Result.Ok (Json.deserialize<'T> (r |> getResponseBody))
         | Error e -> Result.Error e
         
-        
     let deserializeEmptyResponse (response: Result<HttpResponseMessage, AuthError>): Result<unit, AuthError> =
         match response with
         | Ok _    -> Result.Ok ()
         | Error e -> Result.Error e
-    
-    
+        
     let post (url: string) (content: StringContent) (httpClient: HttpClient)
-                 (connection: GoTrueConnection): Result<HttpResponseMessage, AuthError> =
+             (connection: GoTrueConnection): Result<HttpResponseMessage, AuthError> =
         try
             let result =
                 task {
