@@ -6,6 +6,7 @@ open System.Text
 open FSharp.Json
 open GoTrue.Connection
 open GoTrue.Http
+open GoTrue.Common
 
 [<AutoOpen>]
 module Client =
@@ -59,12 +60,12 @@ module Client =
     let maybe = MaybeBuilder()
     
     let private performAuthRequest<'T> (body: Map<string, Object>) (urlParams: string list) (pathSuffix: string)
-                            (authOptions: AuthOptions option) (httpClient: HttpClient) (connection: GoTrueConnection)
+                            (options: AuthOptions option) (httpClient: HttpClient) (connection: GoTrueConnection)
                             (deserializeWith: Result<HttpResponseMessage, AuthError> -> Result<'T, AuthError>): Result<'T, AuthError> =
         let content = new StringContent(Json.serialize(body), Encoding.UTF8, "application/json")
         let redirectTo =
             maybe {
-                let! ao = authOptions
+                let! ao = options
                 let! s = ao.redirectTo
                 return s
             }
@@ -73,59 +74,79 @@ module Client =
             | Some redirectUrl -> redirectUrl :: urlParams
             | None   -> urlParams
         let queryString = if updatedUrlParams.IsEmpty then "" else "?" + (updatedUrlParams |> String.concat "&")
-        let response = connection |> post $"{connection.Url}/{pathSuffix}{queryString}" content httpClient
+        let url = $"{connection.Url}/{pathSuffix}{queryString}"
+        let response = connection |> post url content httpClient
         response |> deserializeWith
     
-    let private signUp<'T> (body: Map<string, Object>) (urlParams: string list) (authOptions: AuthOptions option)
+    let private signUp<'T> (body: Map<string, Object>) (urlParams: string list) (options: AuthOptions option)
                        (httpClient: HttpClient) (connection: GoTrueConnection)
                        (deserializeWith: Result<HttpResponseMessage, AuthError> -> Result<'T, AuthError>): Result<'T, AuthError> =
-        deserializeWith |> performAuthRequest body urlParams "signup" authOptions httpClient connection
+        deserializeWith |> performAuthRequest body urlParams "signup" options httpClient connection
         
     let private signIn<'T> (body: Map<string, Object>) (urlParams: string list) (pathSuffix: string)
-                           (authOptions: AuthOptions option) (httpClient: HttpClient) (connection: GoTrueConnection)
+                           (options: AuthOptions option) (httpClient: HttpClient) (connection: GoTrueConnection)
                            (deserializeWith: Result<HttpResponseMessage, AuthError> -> Result<'T, AuthError>): Result<'T, AuthError> =
-        deserializeWith |> performAuthRequest body urlParams pathSuffix authOptions httpClient connection
+        deserializeWith |> performAuthRequest body urlParams pathSuffix options httpClient connection
         
-    let signUpWithEmail (email: string) (password: string) (authOptions: AuthOptions option)
+    let signUpWithEmail (email: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
         let httpClient = new HttpClient()
         let body = Map<string, Object>[
             "email", email
             "password", password
         ]
-        deserializeResponse |> signUp body [] authOptions httpClient connection
+        deserializeResponse |> signUp body [] options httpClient connection
         
-    let signUpWithPhone (phone: string) (password: string) (authOptions: AuthOptions option)
+    let signUpWithPhone (phone: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
         let httpClient = new HttpClient()
         let body = Map<string, Object>[
             "phone", phone
             "password", password
         ]
-        deserializeResponse |> signUp body [] authOptions httpClient connection
+        deserializeResponse |> signUp body [] options httpClient connection
         
-    let signInWithEmail (email: string) (password: string) (authOptions: AuthOptions option)
+    let signInWithEmail (email: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
         let httpClient = new HttpClient()
         let body = Map<string, Object>[
             "email", email
             "password", password
         ]
-        deserializeResponse |> signIn body ["grant_type=password"] "token" authOptions httpClient connection
+        deserializeResponse |> signIn body ["grant_type=password"] "token" options httpClient connection
         
-    let signInWithPhone (phone: string) (password: string) (authOptions: AuthOptions option)
+    let signInWithPhone (phone: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, AuthError> =
         let httpClient = new HttpClient()
         let body = Map<string, Object>[
             "phone", phone
             "password", password
         ]
-        deserializeResponse |> signIn body ["grant_type=password"] "token" authOptions httpClient connection
+        deserializeResponse |> signIn body ["grant_type=password"] "token" options httpClient connection
         
-    let signInWithMagicLink (email: string) (authOptions: AuthOptions option)
+    let signInWithMagicLink (email: string) (options: AuthOptions option)
                             (connection: GoTrueConnection): Result<unit, AuthError> =
         let httpClient = new HttpClient()
         let body = Map<string, Object>[
             "email", email
         ]
-        deserializeEmptyResponse |> signIn body [] "magiclink" authOptions httpClient connection
+        deserializeEmptyResponse |> signIn body [] "magiclink" options httpClient connection
+    
+    let inviteUserByEmail (email: string) (options: AuthOptions option) (bearer: string) (connection: GoTrueConnection)
+                      : Result<GoTrueSessionResponse, AuthError> =
+        let httpClient = new HttpClient()
+        httpClient |> addRequestHeaders [
+            "Bearer", bearer
+        ]
+        let body = Map<string, Object>[
+            "email", email
+        ]
+        deserializeResponse |> performAuthRequest body [] "invite" options httpClient connection
+        
+    let sendMobileOTP (phone: string) (options: AuthOptions option) (connection: GoTrueConnection)
+                      : Result<GoTrueSessionResponse, AuthError> =
+        let httpClient = new HttpClient()
+        let body = Map<string, Object>[
+            "phone", phone
+        ]
+        deserializeResponse |> signIn body [] "otp" options httpClient connection

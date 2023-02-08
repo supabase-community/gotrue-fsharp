@@ -35,6 +35,8 @@ module Http =
                 task {
                     httpClient |> addRequestHeaders (Map.toList connection.Headers)
                     
+                    printf $"Headers: {httpClient.DefaultRequestHeaders}"
+                    
                     let response = httpClient.PostAsync(url, content)
                     return! response
                 } |> Async.AwaitTask |> Async.RunSynchronously
