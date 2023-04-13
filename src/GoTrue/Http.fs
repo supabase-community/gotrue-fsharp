@@ -1,51 +1,94 @@
-namespace GoTrue.Http
+namespace GoTrue
 
+open System.Net
 open System.Net.Http
 open FSharp.Json
 open GoTrue.Connection
 open GoTrue.Common
-open Microsoft.FSharp.Core
 
 [<AutoOpen>]
 module Http =
-    type AuthError = {
+    type GoTrueError = {
         message: string
-        statusCode: System.Net.HttpStatusCode
+        statusCode: HttpStatusCode option
     }
     
     let private getResponseBody (responseMessage: HttpResponseMessage): string = 
         responseMessage.Content.ReadAsStringAsync()
         |> Async.AwaitTask
-        |> Async.RunSynchronously        
+        |> Async.RunSynchronously
             
-    let deserializeResponse<'T> (response: Result<HttpResponseMessage, AuthError>): Result<'T, AuthError> =
+    let deserializeResponse<'T> (response: Result<HttpResponseMessage, GoTrueError>): Result<'T, GoTrueError> =        
         match response with
-        | Ok r    -> Result.Ok (Json.deserialize<'T> (r |> getResponseBody))
+        | Ok r    ->
+            printfn $"{r.RequestMessage}"
+            Result.Ok (Json.deserialize<'T> (r |> getResponseBody))
         | Error e -> Result.Error e
         
-    let deserializeEmptyResponse (response: Result<HttpResponseMessage, AuthError>): Result<unit, AuthError> =
+    let deserializeEmptyResponse (response: Result<HttpResponseMessage, GoTrueError>): Result<unit, GoTrueError> =
         match response with
         | Ok _    -> Result.Ok ()
         | Error e -> Result.Error e
         
-    let post (url: string) (content: StringContent) (httpClient: HttpClient)
-             (connection: GoTrueConnection): Result<HttpResponseMessage, AuthError> =
+    let executeHttpRequest (headers: Map<string, string> option) (requestMessage: HttpRequestMessage)
+                           (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
         try
+            let httpClient = connection.HttpClient
             let result =
                 task {
-                    httpClient |> addRequestHeaders (Map.toList connection.Headers)
+                    addRequestHeaders connection.Headers requestMessage.Headers
                     
-                    printf $"Headers: {httpClient.DefaultRequestHeaders}"
+                    match headers with
+                    | Some h -> addRequestHeaders h requestMessage.Headers
+                    | _      -> ()
                     
-                    let response = httpClient.PostAsync(url, content)
+                    let response = httpClient.SendAsync(requestMessage)
                     return! response
                 } |> Async.AwaitTask |> Async.RunSynchronously
             match result.StatusCode with
-            | System.Net.HttpStatusCode.OK ->
-                Result.Ok result
-            | statusCode                   ->
-                Result.Error { message = result |> getResponseBody
-                               statusCode = statusCode }
+            | HttpStatusCode.OK -> Result.Ok result
+            | statusCode        ->
+                Result.Error { message    = getResponseBody result
+                               statusCode = Some statusCode }
         with e ->
-            Result.Error { message = e.ToString()
-                           statusCode = System.Net.HttpStatusCode.BadRequest }
+            Result.Error { message    = e.ToString()
+                           statusCode = None }
+            
+    let private getRequestMessage (httpMethod: HttpMethod) (url: string) (urlSuffix: string): HttpRequestMessage =
+        new HttpRequestMessage(httpMethod, $"{url}/{urlSuffix}")
+        
+    let get (urlSuffix: string) (headers: Map<string, string> option)
+            (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
+        let requestMessage = getRequestMessage HttpMethod.Get connection.Url urlSuffix
+
+        executeHttpRequest headers requestMessage connection
+        
+    let delete (urlSuffix: string) (headers: Map<string, string> option) (content: HttpContent option)
+               (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
+        let requestMessage = getRequestMessage HttpMethod.Delete connection.Url urlSuffix
+        match content with
+        | Some c -> requestMessage.Content <- c
+        | _      -> ()
+        
+        executeHttpRequest headers requestMessage connection 
+    
+    let post (urlSuffix: string) (headers: Map<string, string> option) (content: StringContent)
+             (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
+        let requestMessage = getRequestMessage HttpMethod.Post connection.Url urlSuffix
+        requestMessage.Content <- content
+        
+        executeHttpRequest headers requestMessage connection 
+            
+    let patch (urlSuffix: string) (headers: Map<string, string> option) (content: StringContent)
+              (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
+        let requestMessage = getRequestMessage HttpMethod.Patch connection.Url urlSuffix
+        requestMessage.Content <- content
+        
+        executeHttpRequest headers requestMessage connection
+        
+    let put (urlSuffix: string) (headers: Map<string, string> option) (content: StringContent)
+             (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
+        let requestMessage = getRequestMessage HttpMethod.Put connection.Url urlSuffix
+        requestMessage.Content <- content
+        
+        executeHttpRequest headers requestMessage connection 

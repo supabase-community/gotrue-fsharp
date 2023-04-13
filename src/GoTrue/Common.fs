@@ -1,12 +1,9 @@
 namespace GoTrue.Common
 
-open System.Net.Http
+open System.Net.Http.Headers
+
 
 [<AutoOpen>]
 module Common =
-    let private addRequestHeader (key: string) (value: string) (client: HttpClient) =
-        client.DefaultRequestHeaders.Add(key, value)
-    
-    let internal addRequestHeaders (headers: (string * string) list) (client: HttpClient) =
-        headers
-        |> List.iter (fun (key, value) -> client |> addRequestHeader key value)
+    let internal addRequestHeaders (headers: Map<string, string>) (httpRequestHeaders: HttpRequestHeaders): unit =
+        headers |> Seq.iter (fun (KeyValue(k, v)) -> httpRequestHeaders.Add(k, v))
