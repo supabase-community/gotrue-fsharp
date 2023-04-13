@@ -6,7 +6,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Common.fs" />
+    <Compile Include="Connection.fs" />
+    <Compile Include="Http.fs" />
+    <Compile Include="AuthRequestCommon.fs" />
     <Compile Include="Client.fs" />
+    <Compile Include="AdminApi.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Json" Version="0.4.1" />
   </ItemGroup>
 
 </Project>
