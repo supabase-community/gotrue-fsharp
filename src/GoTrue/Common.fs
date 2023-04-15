@@ -57,10 +57,6 @@ module Common =
         user: User option
     }
     
-    type UserResponse = {
-        user: User option
-    }
-    
     let internal addRequestHeaders (headers: Map<string, string>) (httpRequestHeaders: HttpRequestHeaders): unit =
         headers |> Seq.iter (fun (KeyValue(k, v)) -> httpRequestHeaders.Add(k, v))
         
