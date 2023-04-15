@@ -207,11 +207,11 @@ module Client =
         signIn<GoTrueSessionResponse> body [] "verify" options connection deserializeResponse
         
     let updateUser (attributes: UserAttributes) (token: string)
-                   (connection: GoTrueConnection): Result<UserResponse, GoTrueError> =
+                   (connection: GoTrueConnection): Result<User, GoTrueError> =
         let content = getStringContent (Json.serialize attributes)
         
         let result = put "user" (Some (Map<string, string>["Authorization", $"Bearer {token}"])) content connection
-        deserializeResponse<UserResponse> result
+        deserializeResponse<User> result
         
     let signOut (connection: GoTrueConnection): Result<unit, GoTrueError> =
         performAuthRequest None None [] "logout" None connection deserializeEmptyResponse

@@ -55,11 +55,6 @@ module AdminApiHelpers =
 
         loop (linkType.ToString()) ""
         
-    let userToUserResponse (user: Result<User, GoTrueError>): Result<UserResponse, GoTrueError> =
-        match user with
-        | Ok u    -> Ok { user = Some u }
-        | Error e -> Error e
-
 [<AutoOpen>]
 module AdminApi =
     let createUser (attributes: AdminUserAttributes) (connection: GoTrueConnection): Result<User, GoTrueError> =
