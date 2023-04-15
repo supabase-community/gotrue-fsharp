@@ -19,11 +19,17 @@ module Http =
         |> Async.RunSynchronously
             
     let deserializeResponse<'T> (response: Result<HttpResponseMessage, GoTrueError>): Result<'T, GoTrueError> =        
-        match response with
-        | Ok r    ->
-            printfn $"{r.RequestMessage}"
-            Result.Ok (Json.deserialize<'T> (getResponseBody r))
-        | Error e -> Result.Error e
+        try 
+            match response with
+            | Ok r    ->
+                printfn $"{r.RequestMessage}"
+                Result.Ok (Json.deserialize<'T> (getResponseBody r))
+            | Error e -> Result.Error e
+        with
+            | :? System.NullReferenceException as ex ->
+                Error { message = ex.Message ; statusCode = None }
+            | _ ->
+                Error { message = "Unexpected error" ; statusCode = None }
         
     let deserializeEmptyResponse (response: Result<HttpResponseMessage, GoTrueError>): Result<unit, GoTrueError> =
         match response with
