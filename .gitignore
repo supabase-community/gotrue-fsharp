@@ -10,6 +10,12 @@ src/GoTrueExample/obj
 src/GoTrueExample/.idea
 src/GoTrueExample/*.DotSettings.user
 
+# GoTrueTest
+src/GoTrueTest/bin
+src/GoTrueTest/obj
+src/GoTrueTest/.idea
+src/GoTrueTest/*.DotSettings.user
+
 # vscode
 .vscode
 
