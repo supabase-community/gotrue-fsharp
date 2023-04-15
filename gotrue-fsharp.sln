@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GoTrue", "src\GoTrue\GoTrue
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GoTrueExample", "src\GoTrueExample\GoTrueExample.fsproj", "{296CCA2E-93A6-4A5F-A102-45BFB6363333}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "GoTrueTest", "src\GoTrueTest\GoTrueTest.fsproj", "{0F51DEB3-6702-4D02-99C9-6E0410E1699F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +28,14 @@ Global
 		{296CCA2E-93A6-4A5F-A102-45BFB6363333}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{296CCA2E-93A6-4A5F-A102-45BFB6363333}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{296CCA2E-93A6-4A5F-A102-45BFB6363333}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F51DEB3-6702-4D02-99C9-6E0410E1699F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F51DEB3-6702-4D02-99C9-6E0410E1699F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F51DEB3-6702-4D02-99C9-6E0410E1699F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F51DEB3-6702-4D02-99C9-6E0410E1699F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{10B70A16-FDF4-4888-B7F9-2689C85D11B2} = {7091A9AC-EBA6-4F47-83B7-705BB22D18BA}
 		{296CCA2E-93A6-4A5F-A102-45BFB6363333} = {7091A9AC-EBA6-4F47-83B7-705BB22D18BA}
+		{0F51DEB3-6702-4D02-99C9-6E0410E1699F} = {7091A9AC-EBA6-4F47-83B7-705BB22D18BA}
 	EndGlobalSection
 EndGlobal
