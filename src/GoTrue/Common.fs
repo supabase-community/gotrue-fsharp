@@ -1,4 +1,4 @@
-namespace GoTrue.Common
+namespace GoTrue
 
 open System.Net.Http
 open System.Net.Http.Headers
@@ -52,8 +52,8 @@ module Common =
         tokenType: string option
         [<JsonField("provider_token")>]
         providerToken: string option
-        provider: string option
-        url: string option
+        [<JsonField("provider_refresh_token")>]
+        providerRefreshToken: string option
         user: User option
     }
     
