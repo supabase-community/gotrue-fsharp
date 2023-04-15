@@ -2,75 +2,39 @@
 
 open System
 open System.Net.Http
+open System.Text
 open System.Web
 open FSharp.Json
 open GoTrue.AuthRequestCommon
+open GoTrue.Common
 open GoTrue.Connection
 open GoTrue.Http
 
 [<AutoOpen>]
-module ClientHelpers = 
-    let inline signUp<'T> (body: Map<string, obj>) (urlParams: string list) (options: AuthOptions option) (connection: GoTrueConnection)
+module ClientHelpers =
+    type UserAttributes = {
+        email:    string option
+        phone:    string option
+        password: string option
+        data:     Map<string, obj> option
+    }
+    
+    let internal signUp<'T> (body: Map<string, obj>) (urlParams: string list) (options: AuthOptions option) (connection: GoTrueConnection)
                           (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
         performAuthRequest<'T> (Some body) urlParams "signup" options connection deserializeWith
         
-    let inline signIn<'T> (body: Map<string, obj>) (urlParams: string list) (pathSuffix: string)
+    let internal signIn<'T> (body: Map<string, obj>) (urlParams: string list) (pathSuffix: string)
                           (options: AuthOptions option) (connection: GoTrueConnection)
                           (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
         performAuthRequest<'T> (Some body) urlParams pathSuffix options connection deserializeWith
+        
+    let internal addUrlParamIfPresent (value: string option) (urlParams: string list): string list =
+        match value with
+        | Some v -> v :: urlParams
+        | _      -> urlParams
 
 [<AutoOpen>]
-module Client =
-    type User = {
-      id: string
-      aud: string
-      email: string option
-      phone: string option
-      // [<JsonField"app_metadata">]
-      // appMetadata: Map<string, obj>
-      // [<JsonField"user_metadata">]
-      // UserMetadata: Map<string, obj>
-      [<JsonField("email_confirmed_at")>]
-      emailConfirmedAt: string option
-      [<JsonField("phone_confirmed_at")>]
-      phoneConfirmedAt: string option
-      [<JsonField("last_sign_in_at")>]
-      lastSignInAt: string option
-      role: string
-      [<JsonField("created_at")>]
-      createdAt: string
-      [<JsonField("updated_at")>]
-      updatedAt: string
-      [<JsonField("confirmation_sent_at")>]
-      confirmationSentAt: string option
-      [<JsonField("recovery_sent_at")>]
-      recoverySentAt: string option
-      [<JsonField("email_change_sent_at")>]
-      emailChangeSentAt: string option
-      [<JsonField("new_email")>]
-      newEmail: string option
-      [<JsonField("invited_at")>]
-      invitedAt: string option
-      [<JsonField("action_link")>]
-      actionLink: string option
-    }
-    
-    type GoTrueSessionResponse = {
-        [<JsonField("access_token")>]
-        accessToken: string
-        [<JsonField("expires_in")>]
-        expiresIn: int
-        [<JsonField("refresh_token")>]
-        refreshToken: string
-        [<JsonField("token_type")>]
-        tokenType: string option
-        [<JsonField("provider_token")>]
-        providerToken: string option
-        provider: string option
-        url: string option
-        user: User option
-    }
-        
+module Client =    
     let signUpWithEmail (email: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
@@ -106,24 +70,32 @@ module Client =
         ]
         
         signIn<GoTrueSessionResponse> body ["grant_type=password"] "token" options connection deserializeResponse
-     
-    let private getUrlForProvider (provider: string) (options: AuthOptions option) (connection: GoTrueConnection): string =
-        let urlParams = [$"provider={provider}"]
-                         // ; "redirect_to=io.supabase.flutterquickstart://login-callback/"]
-        // let scopes =
-        //     maybe {
-        //         let! ao = options
-        //         let! s = ao.scopes
-        //         return s
-        //     }
-        // match scopes with
-        // Some s ->
+    
+    let private getOAuthUrl (provider: string) (options: AuthOptions option) (connection: GoTrueConnection): string =
+        let redirectTo =
+            maybe {
+                let! ao = options
+                let! r = ao.redirectTo
+                return r
+            }
+        let scopes =
+            maybe {
+                let! ao = options
+                let! s = ao.scopes
+                return s
+            }
+        
+        let urlParams =
+            [ $"provider={provider}" ]
+            |> addUrlParamIfPresent redirectTo
+            |> addUrlParamIfPresent scopes
+            
         let url = connection.Url
-        let joinedParams = urlParams |> String.concat "&"
+        let joinedParams = String.concat "&" urlParams
         $"{url}/authorize?{joinedParams}"
         
     let signInWithProvider (provider: string) (options: AuthOptions option) (connection: GoTrueConnection) =
-        let providerUrl = connection |> getUrlForProvider provider options
+        let providerUrl = connection |> getOAuthUrl provider options
         let uri = Uri(providerUrl)
         let x = HttpUtility.ParseQueryString(provider)
         printfn $"{providerUrl}"
@@ -153,7 +125,7 @@ module Client =
     //     ]
     //     deserializeResponse |> performAuthRequest body [] "invite" options httpClient updatedConnection
         
-    let sendEmailOTP (email: string) (options: AuthOptions option)
+    let signInWithEmailOtp (email: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[
             "email", email
@@ -161,7 +133,7 @@ module Client =
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
     
-    let sendPhoneOTP (phone: string) (options: AuthOptions option)
+    let signInWithPhoneOtp (phone: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[
             "phone", phone
@@ -169,7 +141,7 @@ module Client =
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
         
-    let verifyEmailOTP (email: string) (token: string) (options: AuthOptions option)
+    let verifyEmailOtp (email: string) (token: string) (options: AuthOptions option)
                        (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
             "email", email
@@ -178,7 +150,7 @@ module Client =
         
         signIn<GoTrueSessionResponse> body [] "verify" options connection deserializeResponse
         
-    let verifyPhoneOTP (phone: string) (token: string) (options: AuthOptions option)
+    let verifyPhoneOtp (phone: string) (token: string) (options: AuthOptions option)
                        (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
             "phone", phone
@@ -186,6 +158,13 @@ module Client =
         ]
         
         signIn<GoTrueSessionResponse> body [] "verify" options connection deserializeResponse
+        
+    let updateUser (attributes: UserAttributes) (token: string)
+                   (connection: GoTrueConnection): Result<UserResponse, GoTrueError> =
+        let content = new StringContent(Json.serialize attributes, Encoding.UTF8, "application/json")
+        
+        let result = put "user" (Some (Map<string, string>["Authorization", $"Bearer {token}"])) content connection
+        deserializeResponse<UserResponse> result
         
     let refreshToken (refreshToken: string) (accessToken: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =

@@ -1,6 +1,5 @@
 namespace GoTrue
 
-open System.Net
 open System.Net.Http
 open System.Text
 open FSharp.Json
@@ -9,9 +8,9 @@ open GoTrue.Http
 
 module AuthRequestCommon =
     type AuthOptions = {
-            redirectTo: string option
-            scopes: string option
-        }
+        redirectTo: string option
+        scopes: string option
+    }
         
     type MaybeBuilder() =
         member this.Bind(m, f) = Option.bind f m
@@ -20,7 +19,7 @@ module AuthRequestCommon =
     let maybe = MaybeBuilder()
     
     let internal getUrlParamsString (urlParams: string list): string =
-        if urlParams.IsEmpty then "" else "?" + (urlParams |> String.concat "&")
+        if urlParams.IsEmpty then "" else "?" + (String.concat "&" urlParams)
     
     let performAuthRequest<'T> (body: Map<string, obj> option) (urlParams: string list) (pathSuffix: string)
                                (options: AuthOptions option) (connection: GoTrueConnection)
@@ -31,7 +30,6 @@ module AuthRequestCommon =
                 | Some b -> Json.serialize b
                 | _      -> ""
             
-            printfn $"{serializedBody}"
             let content = new StringContent(serializedBody, Encoding.UTF8, "application/json")
             
             let redirectTo =
@@ -48,10 +46,10 @@ module AuthRequestCommon =
             let queryString = getUrlParamsString updatedUrlParams
             let urlSuffix = $"{pathSuffix}{queryString}"
             
-            let response = connection |> post urlSuffix None content
+            let response = post urlSuffix None content connection
             deserializeWith response
         with
             | :? System.NullReferenceException as ex ->
                 Error { message = ex.Message ; statusCode = None }
-            | _ ->
-                Error{ message = "Unexpected error" ; statusCode = None }
+            | e ->
+                Error { message = e.Message ; statusCode = None }
