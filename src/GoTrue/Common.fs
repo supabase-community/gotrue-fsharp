@@ -1,8 +1,9 @@
 namespace GoTrue.Common
 
+open System.Net.Http
 open System.Net.Http.Headers
+open System.Text
 open FSharp.Json
-
 
 [<AutoOpen>]
 module Common =
@@ -62,3 +63,5 @@ module Common =
     
     let internal addRequestHeaders (headers: Map<string, string>) (httpRequestHeaders: HttpRequestHeaders): unit =
         headers |> Seq.iter (fun (KeyValue(k, v)) -> httpRequestHeaders.Add(k, v))
+        
+    let getStringContent (body: string) = new StringContent(body, Encoding.UTF8, "application/json")

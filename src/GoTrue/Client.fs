@@ -21,12 +21,12 @@ module ClientHelpers =
     
     let internal signUp<'T> (body: Map<string, obj>) (urlParams: string list) (options: AuthOptions option) (connection: GoTrueConnection)
                           (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
-        performAuthRequest<'T> (Some body) urlParams "signup" options connection deserializeWith
+        performAuthRequest<'T> (Some body) None urlParams "signup" options connection deserializeWith
         
     let internal signIn<'T> (body: Map<string, obj>) (urlParams: string list) (pathSuffix: string)
                           (options: AuthOptions option) (connection: GoTrueConnection)
                           (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
-        performAuthRequest<'T> (Some body) urlParams pathSuffix options connection deserializeWith
+        performAuthRequest<'T> (Some body) None urlParams pathSuffix options connection deserializeWith
         
     let internal addUrlParamIfPresent (value: string option) (urlParams: string list): string list =
         match value with
@@ -95,16 +95,14 @@ module Client =
         $"{url}/authorize?{joinedParams}"
         
     let signInWithProvider (provider: string) (options: AuthOptions option) (connection: GoTrueConnection) =
-        let providerUrl = connection |> getOAuthUrl provider options
+        let providerUrl = getOAuthUrl provider options connection
         let uri = Uri(providerUrl)
         let x = HttpUtility.ParseQueryString(provider)
         printfn $"{providerUrl}"
         provider
         
     let signInWithMagicLink (email: string) (options: AuthOptions option) (connection: GoTrueConnection): Result<unit, GoTrueError> =
-        let body = Map<string, obj>[
-            "email", email
-        ]
+        let body = Map<string, obj>[ "email", email ]
         
         signIn<unit> body [] "magiclink" options connection deserializeEmptyResponse
     
@@ -127,17 +125,13 @@ module Client =
         
     let signInWithEmailOtp (email: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<unit, GoTrueError> =
-        let body = Map<string, obj>[
-            "email", email
-        ]
+        let body = Map<string, obj>[ "email", email ]
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
     
     let signInWithPhoneOtp (phone: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<unit, GoTrueError> =
-        let body = Map<string, obj>[
-            "phone", phone
-        ]
+        let body = Map<string, obj>[ "phone", phone ]
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
         
@@ -161,21 +155,16 @@ module Client =
         
     let updateUser (attributes: UserAttributes) (token: string)
                    (connection: GoTrueConnection): Result<UserResponse, GoTrueError> =
-        let content = new StringContent(Json.serialize attributes, Encoding.UTF8, "application/json")
+        let content = getStringContent (Json.serialize attributes)
         
         let result = put "user" (Some (Map<string, string>["Authorization", $"Bearer {token}"])) content connection
         deserializeResponse<UserResponse> result
         
     let refreshToken (refreshToken: string) (accessToken: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
-        let body = Map<string, obj>[
-            "refresh_token", refreshToken
-        ]
-        
-        // TODO: Replace token properly
-        let updatedConnection = 
-            { connection with Headers = connection.Headers |> Map.change "Authorization" (fun _ -> Some accessToken) }
+        let body = Map<string, obj>[ "refresh_token", refreshToken ]
+        let headers = Map<string, String> [ "Authorization", $"Bearer {accessToken}" ]
             
         performAuthRequest<GoTrueSessionResponse>
-            (Some body) ["grant_type=refresh_token"]
-            "token" options updatedConnection deserializeResponse
+            (Some body) (Some headers) ["grant_type=refresh_token"]
+            "token" options connection deserializeResponse

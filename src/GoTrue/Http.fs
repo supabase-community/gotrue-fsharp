@@ -3,8 +3,8 @@ namespace GoTrue
 open System.Net
 open System.Net.Http
 open FSharp.Json
-open GoTrue.Connection
 open GoTrue.Common
+open GoTrue.Connection
 
 [<AutoOpen>]
 module Http =

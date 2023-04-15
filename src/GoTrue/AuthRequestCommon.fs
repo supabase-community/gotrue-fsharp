@@ -3,6 +3,7 @@ namespace GoTrue
 open System.Net.Http
 open System.Text
 open FSharp.Json
+open GoTrue.Common
 open GoTrue.Connection
 open GoTrue.Http
 
@@ -21,8 +22,8 @@ module AuthRequestCommon =
     let internal getUrlParamsString (urlParams: string list): string =
         if urlParams.IsEmpty then "" else "?" + (String.concat "&" urlParams)
     
-    let performAuthRequest<'T> (body: Map<string, obj> option) (urlParams: string list) (pathSuffix: string)
-                               (options: AuthOptions option) (connection: GoTrueConnection)
+    let performAuthRequest<'T> (body: Map<string, obj> option) (headers: Map<string, string> option) (urlParams: string list)
+                               (pathSuffix: string) (options: AuthOptions option) (connection: GoTrueConnection)
                                (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
         try
             let serializedBody =
@@ -30,7 +31,7 @@ module AuthRequestCommon =
                 | Some b -> Json.serialize b
                 | _      -> ""
             
-            let content = new StringContent(serializedBody, Encoding.UTF8, "application/json")
+            let content = getStringContent serializedBody
             
             let redirectTo =
                 maybe {
@@ -46,7 +47,7 @@ module AuthRequestCommon =
             let queryString = getUrlParamsString updatedUrlParams
             let urlSuffix = $"{pathSuffix}{queryString}"
             
-            let response = post urlSuffix None content connection
+            let response = post urlSuffix headers content connection
             deserializeWith response
         with
             | :? System.NullReferenceException as ex ->

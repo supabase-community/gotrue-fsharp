@@ -43,11 +43,11 @@ module AdminApiHelpers =
 [<AutoOpen>]
 module AdminApi =
     let signOut (connection: GoTrueConnection): Result<unit, GoTrueError> =
-        performAuthRequest None [] "logout" None connection deserializeEmptyResponse
+        performAuthRequest None None [] "logout" None connection deserializeEmptyResponse
     
     let createUser (attributes: AdminUserAttributes) (connection: GoTrueConnection): Result<UserResponse, GoTrueError> =
         let body = Json.serialize attributes
-        let content = new StringContent(body, Encoding.UTF8, "application/json") 
+        let content = getStringContent body
         
         let response = post "admin/users" None content connection
         deserializeResponse<UserResponse> response
@@ -77,10 +77,9 @@ module AdminApi =
         
     let inviteUserByEmail (email: string) (options: AuthOptions option)
                           (connection: GoTrueConnection): Result<UserResponse, GoTrueError> =
-        let body = Map<string, obj>[
-            "email", email
-        ]
-        performAuthRequest (Some body) [] "invite" options connection deserializeResponse<UserResponse>
+        let body = Map<string, obj>[ "email", email ]
+        
+        performAuthRequest (Some body) None [] "invite" options connection deserializeResponse<UserResponse>
         
     let getUserById (uid: string) (connection: GoTrueConnection): Result<UserResponse, GoTrueError> =
         let urlSuffix = $"admin/users/{uid}"
@@ -93,7 +92,7 @@ module AdminApi =
         let urlSuffix = $"admin/users/{uid}"
         
         let body = Json.serialize attributes
-        let content = new StringContent(body, Encoding.UTF8, "application/json")
+        let content = getStringContent body
         
         let response = put urlSuffix None content connection
         deserializeResponse<UserResponse> response
@@ -109,4 +108,4 @@ module AdminApi =
             |> addItemToMapIfPresent "data" data
             |> addItemToMapIfPresent "password" password
               
-        performAuthRequest (Some body) [] "admin/generate_lin" options connection deserializeResponse<UserResponse>
+        performAuthRequest (Some body) None [] "admin/generate_lin" options connection deserializeResponse<UserResponse>
