@@ -1,10 +1,10 @@
 namespace GoTrue
 
-open System
 open System.Net.Http
 open System.Text
 open FSharp.Json
 open GoTrue.AuthRequestCommon
+open GoTrue.Common
 open GoTrue.Connection
 open GoTrue.Http
 
@@ -27,10 +27,6 @@ module AdminApiHelpers =
         banDuration:  string option
     }
     
-    type UserResponse = {
-        user: User option
-    }
-    
     type GenerateLinkType =
         | SignUp
         | Invite
@@ -39,7 +35,7 @@ module AdminApiHelpers =
         | EmailChangeCurrent
         | EmailChangeNew
         
-    let inline addItemToMapIfPresent<'a> (key: string) (value: 'a option) (map: Map<string, obj>): Map<string, obj> =
+    let internal addItemToMapIfPresent<'a> (key: string) (value: 'a option) (map: Map<string, obj>): Map<string, obj> =
         match value with
         | Some v -> map |> Map.add key v
         | _      -> map
@@ -104,7 +100,7 @@ module AdminApi =
     
     let generateLink (email: string) (linkType: GenerateLinkType) (options: AuthOptions option) (password: string option)
                      (data: Map<string, obj> option) (connection: GoTrueConnection): Result<UserResponse, GoTrueError> =
-        //TODO: linType to snake_case 
+        //TODO: linkType to snake_case 
         let body =
             Map<string, obj>[
                 "email", email
