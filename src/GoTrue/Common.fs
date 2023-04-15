@@ -1,8 +1,9 @@
-namespace GoTrue.Common
+namespace GoTrue
 
+open System.Net.Http
 open System.Net.Http.Headers
+open System.Text
 open FSharp.Json
-
 
 [<AutoOpen>]
 module Common =
@@ -51,8 +52,8 @@ module Common =
         tokenType: string option
         [<JsonField("provider_token")>]
         providerToken: string option
-        provider: string option
-        url: string option
+        [<JsonField("provider_refresh_token")>]
+        providerRefreshToken: string option
         user: User option
     }
     
@@ -62,3 +63,5 @@ module Common =
     
     let internal addRequestHeaders (headers: Map<string, string>) (httpRequestHeaders: HttpRequestHeaders): unit =
         headers |> Seq.iter (fun (KeyValue(k, v)) -> httpRequestHeaders.Add(k, v))
+        
+    let getStringContent (body: string) = new StringContent(body, Encoding.UTF8, "application/json")

@@ -1,4 +1,4 @@
-namespace GoTrue.Connection
+namespace GoTrue
 
 open System.Net.Http
 
