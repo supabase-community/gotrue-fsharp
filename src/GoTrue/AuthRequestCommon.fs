@@ -42,7 +42,7 @@ module AuthRequestCommon =
             
             let updatedUrlParams =
                 match redirectTo with
-                | Some redirectUrl -> redirectUrl :: urlParams
+                | Some redirectUrl -> urlParams @ [ $"redirect_to={redirectUrl}" ]
                 | None   -> urlParams
             let queryString = getUrlParamsString updatedUrlParams
             let urlSuffix = $"{pathSuffix}{queryString}"
