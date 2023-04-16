@@ -47,9 +47,9 @@ module ClientHelpers =
                           (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
         performAuthRequest<'T> (Some body) None urlParams pathSuffix options connection deserializeWith
         
-    let internal addUrlParamIfPresent (value: string option) (urlParams: string list): string list =
+    let internal addUrlParamIfPresent (key: string) (value: string option) (urlParams: string list): string list =
         match value with
-        | Some v -> v :: urlParams
+        | Some v -> urlParams @ [$"{key}={v}"]
         | _      -> urlParams
 
 [<AutoOpen>]
@@ -90,7 +90,7 @@ module Client =
         
         signIn<GoTrueSessionResponse> body ["grant_type=password"] "token" options connection deserializeResponse
     
-    let private getOAuthUrl (provider: Provider) (options: AuthOptions option) (connection: GoTrueConnection): string =
+    let getOAuthUrl (provider: Provider) (options: AuthOptions option) (connection: GoTrueConnection): string =
         let redirectTo =
             maybe {
                 let! ao = options
@@ -107,8 +107,8 @@ module Client =
         
         let urlParams =
             [ $"provider={providerString}" ]
-            |> addUrlParamIfPresent redirectTo
-            |> addUrlParamIfPresent scopes
+            |> addUrlParamIfPresent "redirect_to" redirectTo
+            |> addUrlParamIfPresent "scopes" scopes
             
         let url = connection.Url
         let joinedParams = String.concat "&" urlParams
