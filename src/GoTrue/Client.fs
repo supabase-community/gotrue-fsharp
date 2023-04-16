@@ -166,24 +166,26 @@ module Client =
                          user                 = Some u }
                 | Error e -> Error e
         
-    let signInWithProvider (provider: Provider) (options: AuthOptions option) (connection: GoTrueConnection) =
+    let signInWithProvider (provider: Provider) (options: AuthOptions option)
+                           (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let providerUrl = getOAuthUrl provider options connection
         let uri = Uri providerUrl
         getSessionFromUrl uri connection
         
-    let signInWithMagicLink (email: string) (options: AuthOptions option) (connection: GoTrueConnection): Result<unit, GoTrueError> =
+    let signInWithMagicLink (email: string) (options: AuthOptions option)
+                            (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[ "email", email ]
         
         signIn<unit> body [] "magiclink" options connection deserializeEmptyResponse
     
     let signInWithEmailOtp (email: string) (options: AuthOptions option)
-                     (connection: GoTrueConnection): Result<unit, GoTrueError> =
+                           (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[ "email", email ]
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
     
     let signInWithPhoneOtp (phone: string) (options: AuthOptions option)
-                     (connection: GoTrueConnection): Result<unit, GoTrueError> =
+                           (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[ "phone", phone ]
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
@@ -209,8 +211,9 @@ module Client =
     let updateUser (attributes: UserAttributes) (token: string)
                    (connection: GoTrueConnection): Result<User, GoTrueError> =
         let content = getStringContent (Json.serialize attributes)
+        let headers = Map<string, string>[ "Authorization", $"Bearer {token}" ]
         
-        let result = put "user" (Some (Map<string, string>["Authorization", $"Bearer {token}"])) content connection
+        let result = put "user" (Some headers) content connection
         deserializeResponse<User> result
         
     let signOut (connection: GoTrueConnection): Result<unit, GoTrueError> =
@@ -228,7 +231,7 @@ module Client =
     let refreshToken (refreshToken: string) (accessToken: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[ "refresh_token", refreshToken ]
-        let headers = Map<string, String> [ "Authorization", $"Bearer {accessToken}" ]
+        let headers = Map<string, string> [ "Authorization", $"Bearer {accessToken}" ]
             
         performAuthRequest<GoTrueSessionResponse>
             (Some body) (Some headers) ["grant_type=refresh_token"]
