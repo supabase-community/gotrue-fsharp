@@ -618,7 +618,7 @@ module SignInWithMagicLinkTests =
         
         // Assert
         match result with
-        | Ok session -> session |> should equal ()
+        | Ok ok -> ok |> should equal ()
         | Error err -> failwithf $"Expected Ok, but got Error: {err}"
         
         // Verify
@@ -721,7 +721,7 @@ module SignInWithOtpTests =
         
         // Assert
         match result with
-        | Ok session -> session |> should equal ()
+        | Ok ok -> ok |> should equal ()
         | Error err -> failwithf $"Expected Ok, but got Error: {err}"
         
         // Verify
@@ -1095,7 +1095,7 @@ module UpdaterUserTests =
         
         // Assert
         match result with
-        | Ok session -> session |> should equal expectedResponse
+        | Ok user -> user |> should equal expectedResponse
         | Error err -> failwithf $"Expected Ok, but got Error: {err}"
         
         // Verify
@@ -1175,7 +1175,7 @@ module SingOutTests =
         
         // Assert
         match result with
-        | Ok session -> session |> should equal ()
+        | Ok ok -> ok |> should equal ()
         | Error err -> failwithf $"Expected Ok, but got Error: {err}"
         
         // Verify
@@ -1218,4 +1218,204 @@ module SingOutTests =
                     req.Method = HttpMethod.Post &&
                     req.Headers.Contains("apiKey") &&
                     req.RequestUri.ToString() = "http://example.com/logout"),
+                ItExpr.IsAny<CancellationToken>())
+            
+[<Collection("resetPassword")>]
+module ResetPasswordTests =
+    [<Fact>]
+    let ``resetPassword returns unit if successful`` () =
+        // Arrange
+        let requestBody =
+            """{
+                "email": "email@email.com",
+                "gotrue_meta_security": {"captcha_token": ""}
+            }"""
+        let mockHandler = mockHttpMessageHandlerWithBody "" requestBody
+        let mockHttpClient = new HttpClient(mockHandler.Object)
+        
+        let connection = goTrueConnection {
+            url "http://example.com"
+            headers Map["apiKey", "exampleApiKey"]
+            httpClient mockHttpClient
+        }
+        
+        // Act
+        let result = Client.resetPassword "email@email.com" None None connection 
+        
+        // Assert
+        match result with
+        | Ok ok -> ok |> should equal ()
+        | Error err -> failwithf $"Expected Ok, but got Error: {err}"
+        
+        // Verify
+        mockHandler.Protected()
+            .Verify("SendAsync", Times.Once(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+        mockHandler.Protected()
+            .Verify("SendAsync", Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(fun req ->
+                    req.Method = HttpMethod.Post &&
+                    req.Headers.Contains("apiKey") &&
+                    req.RequestUri.ToString() = "http://example.com/recover" &&
+                    req.Content.ReadAsStringAsync().Result = requestBody),
+                ItExpr.IsAny<CancellationToken>())
+            
+    [<Fact>]
+    let ``resetPassword returns GoTrueError if not successful`` () =
+        // Arrange
+        let requestBody =
+            """{
+                "email": "email@email.com",
+                "gotrue_meta_security": {"captcha_token": ""}
+            }"""
+        let expectedError = { message = "Bad Request"; statusCode = Some HttpStatusCode.BadRequest }
+        
+        let mockHandler = mockHttpMessageHandlerWithBodyFail expectedError requestBody
+        let mockHttpClient = new HttpClient(mockHandler.Object)
+        
+        let connection = goTrueConnection {
+            url "http://example.com"
+            headers Map["apiKey", "exampleApiKey"]
+            httpClient mockHttpClient
+        }
+        
+        // Act
+        let result = Client.resetPassword "email@email.com" None None connection
+        
+        // Assert
+        match result with
+        | Ok ok -> failwithf $"Expected Error, but got Ok: {ok}"
+        | Error err -> err |> should equal expectedError
+        
+        // Verify
+        mockHandler.Protected()
+            .Verify("SendAsync", Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(fun req ->
+                    req.Method = HttpMethod.Post &&
+                    req.Headers.Contains("apiKey") &&
+                    req.RequestUri.ToString() = "http://example.com/recover" &&
+                    req.Content.ReadAsStringAsync().Result = requestBody),
+                ItExpr.IsAny<CancellationToken>())
+            
+[<Collection("refreshToken")>]
+module RefreshTokenTests =
+    [<Fact>]
+    let ``refreshToken returns GoTrueSessionResponse if successful`` () =
+        // Arrange
+        let requestBody ="""{"refresh_token": "refresh-token"}"""
+        let response =
+            """{
+                "access_token": "access-token",
+                "expires_in": 3600,
+                "refresh_token": "refresh-token",
+                "token_type": "bearer",
+                "provider_token": null,
+                "provider_refresh_token": null,
+                "user": {
+                        "id": "user-id",
+                        "aud": "authenticated",
+                        "email": null,
+                        "phone": "09123456789",
+                        "email_confirmed_at": null,
+                        "phone_confirmed_at": "2023-01-01T12:00:00Z",
+                        "last_sign_in_at": "2023-01-01T12:00:00Z",
+                        "role": "authenticated",
+                        "created_at": "2023-01-01T12:00:00Z",
+                        "updated_at": "2023-01-01T12:00:00Z",
+                        "confirmation_sent_at": null,
+                        "recovery_sent_at": "2023-01-01T12:00:00Z",
+                        "email_change_sent_at": null,
+                        "new_email": null,
+                        "invited_at": null,
+                        "action_link": null
+                }
+            }"""
+        let expectedResponse =
+            { accessToken = "access-token"
+              expiresIn = 3600
+              refreshToken = "refresh-token"
+              tokenType = Some "bearer"
+              providerToken = None
+              providerRefreshToken = None
+              user =
+                Some
+                    { id = "user-id"
+                      aud = "authenticated"
+                      email = None
+                      phone = Some "09123456789"
+                      emailConfirmedAt = None
+                      phoneConfirmedAt = Some "2023-01-01T12:00:00Z"
+                      lastSignInAt = Some "2023-01-01T12:00:00Z"
+                      role =  "authenticated"
+                      createdAt = "2023-01-01T12:00:00Z"
+                      updatedAt ="2023-01-01T12:00:00Z"
+                      confirmationSentAt = None
+                      recoverySentAt = Some "2023-01-01T12:00:00Z"
+                      emailChangeSentAt = None
+                      newEmail = None
+                      invitedAt = None
+                      actionLink = None }
+            }
+        
+        let mockHandler = mockHttpMessageHandlerWithBody response requestBody
+        let mockHttpClient = new HttpClient(mockHandler.Object)
+        
+        let connection = goTrueConnection {
+            url "http://example.com"
+            headers Map["apiKey", "exampleApiKey"]
+            httpClient mockHttpClient
+        }
+        
+        // Act
+        let result = Client.refreshToken "refresh-token" "access-token" None connection
+        
+        // Assert
+        match result with
+        | Ok session -> session |> should equal expectedResponse
+        | Error err -> failwithf $"Expected Ok, but got Error: {err}"
+        
+        // Verify
+        mockHandler.Protected()
+            .Verify("SendAsync", Times.Once(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+        mockHandler.Protected()
+            .Verify("SendAsync", Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(fun req ->
+                    req.Method = HttpMethod.Post &&
+                    req.Headers.Contains("apiKey") &&
+                    req.Headers.Contains("Authorization") &&
+                    req.RequestUri.ToString() = "http://example.com/token?grant_type=refresh_token" &&
+                    req.Content.ReadAsStringAsync().Result = requestBody),
+                ItExpr.IsAny<CancellationToken>())
+            
+    [<Fact>]
+    let ``refreshToken returns GoTrueError if not successful`` () =
+        // Arrange
+        let requestBody = """{"refresh_token": "refresh-token"}"""
+        let expectedError = { message = "Bad Request"; statusCode = Some HttpStatusCode.BadRequest }
+        
+        let mockHandler = mockHttpMessageHandlerWithBodyFail expectedError requestBody
+        let mockHttpClient = new HttpClient(mockHandler.Object)
+        
+        let connection = goTrueConnection {
+            url "http://example.com"
+            headers Map["apiKey", "exampleApiKey"]
+            httpClient mockHttpClient
+        }
+        
+        // Act
+        let result = Client.refreshToken "refresh-token" "access-token" None connection
+        
+        // Assert
+        match result with
+        | Ok ok -> failwithf $"Expected Error, but got Ok: {ok}"
+        | Error err -> err |> should equal expectedError
+        
+        // Verify
+        mockHandler.Protected()
+            .Verify("SendAsync", Times.Once(),
+                ItExpr.Is<HttpRequestMessage>(fun req ->
+                    req.Method = HttpMethod.Post &&
+                    req.Headers.Contains("apiKey") &&
+                    req.Headers.Contains("Authorization") &&
+                    req.RequestUri.ToString() = "http://example.com/token?grant_type=refresh_token" &&
+                    req.Content.ReadAsStringAsync().Result = requestBody),
                 ItExpr.IsAny<CancellationToken>())
