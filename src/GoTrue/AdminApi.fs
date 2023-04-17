@@ -84,7 +84,7 @@ module AdminApi =
         let queryString = getUrlParamsString urlParams
         let urlSuffix = $"{pathSuffix}{queryString}"    
     
-        let response = delete urlSuffix None None connection
+        let response = get urlSuffix None connection
         deserializeResponse<User list> response
         
     let inviteUserByEmail (email: string) (options: AuthOptions option)
