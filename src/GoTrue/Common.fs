@@ -5,8 +5,10 @@ open System.Net.Http.Headers
 open System.Text
 open FSharp.Json
 
+/// Contains shared helper functions and types
 [<AutoOpen>]
 module Common =
+    /// Represents user type
     type User = {
       id: string
       aud: string
@@ -41,6 +43,7 @@ module Common =
       actionLink: string option
     }
     
+    /// Represents auth response with necessary tokens
     type GoTrueSessionResponse = {
         [<JsonField("access_token")>]
         accessToken: string
@@ -57,7 +60,9 @@ module Common =
         user: User option
     }
     
+    /// Adds HttpRequestHeaders to given headers Map
     let internal addRequestHeaders (headers: Map<string, string>) (httpRequestHeaders: HttpRequestHeaders): unit =
         headers |> Seq.iter (fun (KeyValue(k, v)) -> httpRequestHeaders.Add(k, v))
         
+    /// Creates `StringContent` from Json encoded string
     let getStringContent (body: string) = new StringContent(body, Encoding.UTF8, "application/json")

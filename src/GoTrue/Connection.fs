@@ -2,8 +2,10 @@ namespace GoTrue
 
 open System.Net.Http
 
+/// Contains CE for creating connection
 [<AutoOpen>]
 module Connection =
+    /// Represents base connection
     type GoTrueConnection = {
         Url: string
         Headers: Map<string, string>

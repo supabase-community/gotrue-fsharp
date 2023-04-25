@@ -10,8 +10,10 @@ open GoTrue.Common
 open GoTrue.Connection
 open GoTrue.Http
 
+/// Contains helper functions and types for `Client.fs` module
 [<AutoOpen>]
 module ClientHelpers =
+    /// Represents updated user attributes
     type UserAttributes = {
         email:    string option
         phone:    string option
@@ -19,6 +21,7 @@ module ClientHelpers =
         data:     Map<string, obj> option
     }
     
+    /// Represents OAuth 2.0 provider
     type Provider =
         | Apple
         | Azure
@@ -38,22 +41,30 @@ module ClientHelpers =
         | WorkOS
         | Zoom
     
-    let internal signUp<'T> (body: Map<string, obj>) (urlParams: string list) (options: AuthOptions option) (connection: GoTrueConnection)
-                          (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
+    /// Performs sign up request
+    let internal signUp<'T> (body: Map<string, obj>) (urlParams: string list) (options: AuthOptions option)
+                            (connection: GoTrueConnection)
+                            (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>)
+                            : Result<'T, GoTrueError> =
         performAuthRequest<'T> (Some body) None urlParams "signup" options connection deserializeWith
         
+    /// Performs sign in request
     let internal signIn<'T> (body: Map<string, obj>) (urlParams: string list) (pathSuffix: string)
-                          (options: AuthOptions option) (connection: GoTrueConnection)
-                          (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
+                            (options: AuthOptions option) (connection: GoTrueConnection)
+                            (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>)
+                            : Result<'T, GoTrueError> =
         performAuthRequest<'T> (Some body) None urlParams pathSuffix options connection deserializeWith
         
+    /// Appends key-value pair as url param to url params list if value is present
     let internal addUrlParamIfPresent (key: string) (value: string option) (urlParams: string list): string list =
         match value with
         | Some v -> urlParams @ [$"{key}={v}"]
         | _      -> urlParams
 
+/// Contains main functions needed for communication with [GoTrue](https://supabase.com/docs/guides/auth)
 [<AutoOpen>]
 module Client =    
+    /// Signs up user with given email, password and optional options
     let signUpWithEmail (email: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
@@ -63,6 +74,7 @@ module Client =
         
         signUp<GoTrueSessionResponse> body [] options connection deserializeResponse 
         
+    /// Signs up user with given phone number, password and optional options
     let signUpWithPhone (phone: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
@@ -72,6 +84,7 @@ module Client =
         
         signUp<GoTrueSessionResponse> body [] options connection deserializeResponse
         
+    /// Signs in user with given email, password and optional options
     let signInWithEmail (email: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
@@ -81,6 +94,7 @@ module Client =
         
         signIn<GoTrueSessionResponse> body ["grant_type=password"] "token" options connection deserializeResponse
         
+    /// Signs in user with given phone, password and optional options
     let signInWithPhone (phone: string) (password: string) (options: AuthOptions option)
                         (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
@@ -90,6 +104,7 @@ module Client =
         
         signIn<GoTrueSessionResponse> body ["grant_type=password"] "token" options connection deserializeResponse
     
+    /// Constructs url for given OAuth 2.0 provider with given optional options
     let getOAuthUrl (provider: Provider) (options: AuthOptions option) (connection: GoTrueConnection): string =
         let redirectTo =
             maybe {
@@ -114,6 +129,8 @@ module Client =
         let joinedParams = String.concat "&" urlParams
         $"{url}/authorize?{joinedParams}"
         
+    /// Gets session from given uri (pass uri which were you redirected to after successful authorization at
+    /// OAuth 2.0 provider web page)
     let getSessionFromUrl (originUrl: Uri) (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let url = 
             match String.IsNullOrEmpty originUrl.Query with
@@ -166,30 +183,36 @@ module Client =
                          user                 = Some u }
                 | Error e -> Error e
         
+    /// Signs in user with given provider
+    /// Experimental method!!!
     let signInWithProvider (provider: Provider) (options: AuthOptions option)
                            (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let providerUrl = getOAuthUrl provider options connection
         let uri = Uri providerUrl
         getSessionFromUrl uri connection
         
+    /// Sends link to sign in to user with given email
     let signInWithMagicLink (email: string) (options: AuthOptions option)
                             (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[ "email", email ]
         
         signIn<unit> body [] "magiclink" options connection deserializeEmptyResponse
     
+    /// Signs user with given email by one time password
     let signInWithEmailOtp (email: string) (options: AuthOptions option)
                            (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[ "email", email ]
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
     
+    /// Signs user with given phone by one time password
     let signInWithPhoneOtp (phone: string) (options: AuthOptions option)
                            (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj>[ "phone", phone ]
         
         signIn<unit> body [] "otp" options connection deserializeEmptyResponse
         
+    /// Verifies email otp (one time password)
     let verifyEmailOtp (email: string) (token: string) (options: AuthOptions option)
                        (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
@@ -199,6 +222,7 @@ module Client =
         
         signIn<GoTrueSessionResponse> body [] "verify" options connection deserializeResponse
         
+    /// Verifies password otp (one time password)
     let verifyPhoneOtp (phone: string) (token: string) (options: AuthOptions option)
                        (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[
@@ -208,6 +232,7 @@ module Client =
         
         signIn<GoTrueSessionResponse> body [] "verify" options connection deserializeResponse
         
+    /// Updates user with given attributes by given Bearer token
     let updateUser (attributes: UserAttributes) (token: string)
                    (connection: GoTrueConnection): Result<User, GoTrueError> =
         let content = getStringContent (Json.serialize attributes)
@@ -216,9 +241,11 @@ module Client =
         let result = put "user" (Some headers) content connection
         deserializeResponse<User> result
         
+    /// Signs user out
     let signOut (connection: GoTrueConnection): Result<unit, GoTrueError> =
         performAuthRequest None None [] "logout" None connection deserializeEmptyResponse
         
+    /// Resets password for user with given email address
     let resetPassword (email: string) (options: AuthOptions option) (captchaToken: string option)
                       (connection: GoTrueConnection): Result<unit, GoTrueError> =
         let body = Map<string, obj> [
@@ -228,6 +255,7 @@ module Client =
         
         performAuthRequest<unit> (Some body) None [] "recover" options connection deserializeEmptyResponse
         
+    /// Generates new `GoTrueSessionResponse` with fresh tokens
     let refreshToken (refreshToken: string) (accessToken: string) (options: AuthOptions option)
                      (connection: GoTrueConnection): Result<GoTrueSessionResponse, GoTrueError> =
         let body = Map<string, obj>[ "refresh_token", refreshToken ]

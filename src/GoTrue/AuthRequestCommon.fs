@@ -7,21 +7,27 @@ open GoTrue.Common
 open GoTrue.Connection
 open GoTrue.Http
 
+/// Contains helper functions and types for performing auth request 
 module AuthRequestCommon =
+    /// Represents options for auth request
     type AuthOptions = {
         redirectTo: string option
         scopes: string option
     }
         
+    /// Represents helper builder pro checking `Option` types
     type MaybeBuilder() =
         member this.Bind(m, f) = Option.bind f m
         member this.Return(x) = Some x
 
     let maybe = MaybeBuilder()
     
+    /// Creates valid url param string from list of url params
     let internal getUrlParamsString (urlParams: string list): string =
         if urlParams.IsEmpty then "" else "?" + (String.concat "&" urlParams)
     
+    /// Performs base auth request. Handles body, headers and url of request.
+    /// Deserializes response with `deserializeWith` function.
     let performAuthRequest<'T> (body: Map<string, obj> option) (headers: Map<string, string> option) (urlParams: string list)
                                (pathSuffix: string) (options: AuthOptions option) (connection: GoTrueConnection)
                                (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
