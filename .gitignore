@@ -29,4 +29,7 @@ src/GoTrueTest/*.DotSettings.user
 # MacOS
 .DS_Store
 
+# docs
+.fsdocs
+
 *.DotSettings.user

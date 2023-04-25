@@ -6,6 +6,7 @@ open FSharp.Json
 open GoTrue.Common
 open GoTrue.Connection
 
+/// Contains functions for performing http request and serialization/deserialization of data
 [<AutoOpen>]
 module Http =
     type GoTrueError = {
@@ -13,11 +14,13 @@ module Http =
         statusCode: HttpStatusCode option
     }
     
+    /// Parses HttpResponseMessage to it's string form
     let private getResponseBody (responseMessage: HttpResponseMessage): string = 
         responseMessage.Content.ReadAsStringAsync()
         |> Async.AwaitTask
         |> Async.RunSynchronously
             
+    /// Deserializes given response
     let deserializeResponse<'T> (response: Result<HttpResponseMessage, GoTrueError>): Result<'T, GoTrueError> =        
         try 
             match response with
@@ -31,11 +34,13 @@ module Http =
             | _ ->
                 Error { message = "Unexpected error" ; statusCode = None }
         
+    /// Deserializes empty (unit) response
     let deserializeEmptyResponse (response: Result<HttpResponseMessage, GoTrueError>): Result<unit, GoTrueError> =
         match response with
         | Ok _    -> Result.Ok ()
         | Error e -> Result.Error e
         
+    /// Executes http response with given headers, requestMessage and handles possible exceptions
     let executeHttpRequest (requestMessage: HttpRequestMessage) (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
         try
             let httpClient = connection.HttpClient
@@ -58,6 +63,7 @@ module Http =
         with e -> Result.Error { message    = e.ToString()
                                  statusCode = None }
             
+    /// Constructs HttpRequestMessage with given method, url and headers
     let private getRequestMessage (httpMethod: HttpMethod) (url: string) (urlSuffix: string)
                                   (headers: Map<string, string> option): HttpRequestMessage =
         let requestMessage = new HttpRequestMessage(httpMethod, $"{url}/{urlSuffix}")
@@ -66,12 +72,14 @@ module Http =
         | _      -> ()
         requestMessage
         
+    /// Performs http GET request
     let get (urlSuffix: string) (headers: Map<string, string> option)
             (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
         let requestMessage = getRequestMessage HttpMethod.Get connection.Url urlSuffix headers
 
         executeHttpRequest requestMessage connection
         
+    /// Performs http DELETE request
     let delete (urlSuffix: string) (headers: Map<string, string> option) (content: HttpContent option)
                (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
         let requestMessage = getRequestMessage HttpMethod.Delete connection.Url urlSuffix headers
@@ -81,6 +89,7 @@ module Http =
         
         executeHttpRequest requestMessage connection 
     
+    /// Performs http POST request
     let post (urlSuffix: string) (headers: Map<string, string> option) (content: StringContent)
              (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
         let requestMessage = getRequestMessage HttpMethod.Post connection.Url urlSuffix headers
@@ -88,6 +97,7 @@ module Http =
         
         executeHttpRequest requestMessage connection 
             
+    /// Performs http PATCH request
     let patch (urlSuffix: string) (headers: Map<string, string> option) (content: StringContent)
               (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
         let requestMessage = getRequestMessage HttpMethod.Patch connection.Url urlSuffix headers
@@ -95,6 +105,7 @@ module Http =
         
         executeHttpRequest requestMessage connection
         
+    /// Performs http PUT request
     let put (urlSuffix: string) (headers: Map<string, string> option) (content: StringContent)
              (connection: GoTrueConnection): Result<HttpResponseMessage, GoTrueError> =
         let requestMessage = getRequestMessage HttpMethod.Put connection.Url urlSuffix headers
