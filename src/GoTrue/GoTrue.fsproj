@@ -6,11 +6,12 @@
     <!-- FSharp.Formatting (fsdocs) start -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Authors>Samuel Dubovec</Authors>
-    <FsDocsLicenseLink>https://github.com/Samo8/gotrue-fsharp/blob/master/LICENSE</FsDocsLicenseLink>
+    <FsDocsLicenseLink>https://github.com/Samo8/gotrue-fsharp/blob/develop/LICENSE</FsDocsLicenseLink>
     <FsDocsLogoSource>../content/img/logo.jpeg</FsDocsLogoSource>
     <PackageProjectUrl>..</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Samo8/gotrue-fsharp</RepositoryUrl>
+    <RepositoryBranch>develop</RepositoryBranch>
     <UsesMarkdownComments>true</UsesMarkdownComments>
     <!-- FSharp.Formatting (fsdocs) end -->
   </PropertyGroup>
