@@ -84,7 +84,10 @@ module SignUpTests =
         }
         
         // Act
-        let result = Client.signUpWithEmail "email@email.com" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signUpWithEmail "email@email.com" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -123,7 +126,10 @@ module SignUpTests =
         }
         
         // Act
-        let result = Client.signUpWithEmail "email@email.com" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signUpWithEmail "email@email.com" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -212,7 +218,10 @@ module SignUpTests =
         }
         
         // Act
-        let result = Client.signUpWithPhone "09123456789" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signUpWithPhone "09123456789" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -251,7 +260,10 @@ module SignUpTests =
         }
         
         // Act
-        let result = Client.signUpWithPhone "09123456789" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signUpWithPhone "09123456789" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -342,7 +354,10 @@ module SignInTests =
         }
         
         // Act
-        let result = Client.signInWithEmail "email@email.com" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signInWithEmail "email@email.com" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -381,7 +396,10 @@ module SignInTests =
         }
         
         // Act
-        let result = Client.signInWithEmail "email@email.com" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signInWithEmail "email@email.com" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -470,7 +488,10 @@ module SignInTests =
         }
         
         // Act
-        let result = Client.signInWithPhone "09123456789" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signInWithPhone "09123456789" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -509,7 +530,10 @@ module SignInTests =
         }
         
         // Act
-        let result = Client.signInWithPhone "09123456789" "secret-password" None connection 
+        let result =
+            connection
+            |> Client.signInWithPhone "09123456789" "secret-password" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -614,7 +638,10 @@ module SignInWithMagicLinkTests =
         }
         
         // Act
-        let result = Client.signInWithMagicLink "email@email.com" None connection 
+        let result =
+            connection
+            |> Client.signInWithMagicLink "email@email.com" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -650,7 +677,10 @@ module SignInWithOtpTests =
         }
         
         // Act
-        let result = Client.signInWithEmailOtp "email@email.com" None connection 
+        let result =
+            connection
+            |> Client.signInWithEmailOtp "email@email.com" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -685,7 +715,10 @@ module SignInWithOtpTests =
         }
         
         // Act
-        let result = Client.signInWithEmailOtp "email@email.com" None connection 
+        let result =
+            connection
+            |> Client.signInWithEmailOtp "email@email.com" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -717,7 +750,10 @@ module SignInWithOtpTests =
         }
         
         // Act
-        let result = Client.signInWithPhoneOtp "09123456789" None connection 
+        let result =
+            connection
+            |> Client.signInWithPhoneOtp "09123456789" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -752,7 +788,10 @@ module SignInWithOtpTests =
         }
         
         // Act
-        let result = Client.signInWithPhoneOtp "09123456789" None connection 
+        let result =
+            connection
+            |> Client.signInWithPhoneOtp "09123456789" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -843,7 +882,10 @@ module VerifyOtpTests =
         }
         
         // Act
-        let result = Client.verifyEmailOtp "email@email.com" "otp-token" None connection 
+        let result =
+            connection
+            |> Client.verifyEmailOtp "email@email.com" "otp-token" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -882,7 +924,10 @@ module VerifyOtpTests =
         }
         
         // Act
-        let result = Client.verifyEmailOtp "email@email.com" "otp-token" None connection 
+        let result =
+            connection
+            |> Client.verifyEmailOtp "email@email.com" "otp-token" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -971,7 +1016,10 @@ module VerifyOtpTests =
         }
         
         // Act
-        let result = Client.verifyPhoneOtp "09123456789" "otp-token" None connection 
+        let result =
+            connection
+            |> Client.verifyPhoneOtp "09123456789" "otp-token" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -1010,7 +1058,10 @@ module VerifyOtpTests =
         }
         
         // Act
-        let result = Client.verifyPhoneOtp "09123456789" "otp-token" None connection 
+        let result =
+            connection
+            |> Client.verifyPhoneOtp "09123456789" "otp-token" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -1091,7 +1142,10 @@ module UpdaterUserTests =
         }
         
         // Act
-        let result = Client.updateUser attributes "token" connection
+        let result =
+            connection
+            |> Client.updateUser attributes "token"
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -1138,7 +1192,10 @@ module UpdaterUserTests =
         }
         
         // Act
-        let result = Client.updateUser attributes "token" connection
+        let result =
+            connection
+            |> Client.updateUser attributes "token"
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -1171,7 +1228,7 @@ module SingOutTests =
         }
         
         // Act
-        let result = Client.signOut connection 
+        let result = connection |> Client.signOut |> Async.RunSynchronously 
         
         // Assert
         match result with
@@ -1204,7 +1261,7 @@ module SingOutTests =
         }
         
         // Act
-        let result = Client.signOut connection 
+        let result = connection |> Client.signOut |> Async.RunSynchronously 
         
         // Assert
         match result with
@@ -1240,7 +1297,10 @@ module ResetPasswordTests =
         }
         
         // Act
-        let result = Client.resetPassword "email@email.com" None None connection 
+        let result =
+            connection
+            |> Client.resetPassword "email@email.com" None None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -1279,7 +1339,10 @@ module ResetPasswordTests =
         }
         
         // Act
-        let result = Client.resetPassword "email@email.com" None None connection
+        let result =
+            connection
+            |> Client.resetPassword "email@email.com" None None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -1366,7 +1429,10 @@ module RefreshTokenTests =
         }
         
         // Act
-        let result = Client.refreshToken "refresh-token" "access-token" None connection
+        let result =
+            connection
+            |> Client.refreshToken "refresh-token" "access-token" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -1402,7 +1468,10 @@ module RefreshTokenTests =
         }
         
         // Act
-        let result = Client.refreshToken "refresh-token" "access-token" None connection
+        let result =
+            connection
+            |> Client.refreshToken "refresh-token" "access-token" None
+            |> Async.RunSynchronously
         
         // Assert
         match result with

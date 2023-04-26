@@ -83,7 +83,7 @@ module CreateUserTests =
         }
         
         // Act
-        let result = AdminApi.createUser attributes connection 
+        let result = connection |> AdminApi.createUser attributes |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -133,7 +133,7 @@ module CreateUserTests =
         }
         
         // Act
-        let result = AdminApi.createUser attributes connection 
+        let result = connection |> AdminApi.createUser attributes |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -166,7 +166,7 @@ module DeleteUserTests =
         }
         
         // Act
-        let result = AdminApi.deleteUser "user-id" connection 
+        let result = connection |> AdminApi.deleteUser "user-id" |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -200,7 +200,7 @@ module DeleteUserTests =
         }
         
         // Act
-        let result = AdminApi.deleteUser "user-id" connection
+        let result = connection |> AdminApi.deleteUser "user-id" |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -306,7 +306,7 @@ module ListUsersTests =
         }
         
         // Act
-        let result = AdminApi.listUsers (Some 1) (Some 100) connection
+        let result = connection |> AdminApi.listUsers (Some 1) (Some 100) |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -339,7 +339,7 @@ module ListUsersTests =
         }
         
         // Act
-        let result = AdminApi.listUsers (Some 1) (Some 100) connection
+        let result = connection |> AdminApi.listUsers (Some 1) (Some 100) |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -408,7 +408,7 @@ module InviteUserByEmailTests =
         }
         
         // Act
-        let result = AdminApi.inviteUserByEmail "email@email.com" None connection 
+        let result = connection |> AdminApi.inviteUserByEmail "email@email.com" None |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -443,7 +443,7 @@ module InviteUserByEmailTests =
         }
         
         // Act
-        let result = AdminApi.inviteUserByEmail "email@email.com" None connection 
+        let result = connection |> AdminApi.inviteUserByEmail "email@email.com" None |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -512,7 +512,7 @@ module GetUserByIdTests =
         }
         
         // Act
-        let result = AdminApi.getUserById "user-id" connection 
+        let result = connection |> AdminApi.getUserById "user-id" |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -545,7 +545,7 @@ module GetUserByIdTests =
         }
         
         // Act
-        let result = AdminApi.getUserById "user-id" connection 
+        let result = connection |> AdminApi.getUserById "user-id" |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -635,7 +635,7 @@ module UpdateUserByIdTests =
         }
         
         // Act
-        let result = AdminApi.updateUserById "user-id" attributes connection 
+        let result = connection |> AdminApi.updateUserById "user-id" attributes |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -685,7 +685,7 @@ module UpdateUserByIdTests =
         }
         
         // Act
-        let result = AdminApi.updateUserById "user-id" attributes connection 
+        let result = connection |> AdminApi.updateUserById "user-id" attributes |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -760,7 +760,10 @@ module GenerateLinkTests =
         }
         
         // Act
-        let result = AdminApi.generateLink "email@email.com" SignUp None (Some "strong-password") None connection
+        let result =
+            connection
+            |> AdminApi.generateLink "email@email.com" SignUp None (Some "strong-password") None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
@@ -800,7 +803,10 @@ module GenerateLinkTests =
         }
         
         // Act
-        let result = AdminApi.generateLink "email@email.com" SignUp None (Some "strong-password") None connection
+        let result =
+            connection 
+            |> AdminApi.generateLink "email@email.com" SignUp None (Some "strong-password") None
+            |> Async.RunSynchronously
         
         // Assert
         match result with
