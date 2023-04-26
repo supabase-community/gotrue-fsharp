@@ -65,22 +65,27 @@ module AdminApiHelpers =
 [<AutoOpen>]
 module AdminApi =
     /// Creates user with given attributes
-    let createUser (attributes: AdminUserAttributes) (connection: GoTrueConnection): Result<User, GoTrueError> =
+    let createUser (attributes: AdminUserAttributes) (connection: GoTrueConnection): Async<Result<User, GoTrueError>> =
         let body = Json.serialize attributes
         let content = getStringContent body
         
-        let response = post "admin/users" None content connection
-        deserializeResponse<User> response
+        async {
+            let! response = post "admin/users" None content connection
+            return deserializeResponse<User> response
+        }
         
     /// Deletes user by id
-    let deleteUser (id: string) (connection: GoTrueConnection): Result<unit, GoTrueError> =
+    let deleteUser (id: string) (connection: GoTrueConnection): Async<Result<unit, GoTrueError>> =
         let urlSuffix = $"admin/users/{id}"
         
-        let response = delete urlSuffix None None connection
-        deserializeEmptyResponse response
+        async {
+            let! response = delete urlSuffix None None connection
+            return deserializeEmptyResponse response
+        }
         
     /// Lists users with respect to page and perPage params
-    let listUsers (page: int option) (perPage: int option) (connection: GoTrueConnection): Result<User list, GoTrueError> =
+    let listUsers (page: int option) (perPage: int option)
+                  (connection: GoTrueConnection): Async<Result<User list, GoTrueError>> =
         let pathSuffix = "admin/users"
         
         let pageUrlParam = Option.bind (fun x -> Some $"page={x}") page
@@ -94,37 +99,43 @@ module AdminApi =
         let queryString = getUrlParamsString urlParams
         let urlSuffix = $"{pathSuffix}{queryString}"    
     
-        let response = get urlSuffix None connection
-        deserializeResponse<User list> response
+        async {
+            let! response = get urlSuffix None connection
+            return deserializeResponse<User list> response
+        }
         
     /// Sends invitation email to user with given email address
     let inviteUserByEmail (email: string) (options: AuthOptions option)
-                          (connection: GoTrueConnection): Result<User, GoTrueError> =
+                          (connection: GoTrueConnection): Async<Result<User, GoTrueError>> =
         let body = Map<string, obj>[ "email", email ]
         
         performAuthRequest (Some body) None [] "invite" options connection deserializeResponse<User>
         
     /// Gets user detail by given uid
-    let getUserById (uid: string) (connection: GoTrueConnection): Result<User, GoTrueError> =
+    let getUserById (uid: string) (connection: GoTrueConnection): Async<Result<User, GoTrueError>> =
         let urlSuffix = $"admin/users/{uid}"
         
-        let response = get urlSuffix None connection
-        deserializeResponse<User> response
+        async {
+            let! response = get urlSuffix None connection
+            return deserializeResponse<User> response
+        }
         
     /// Updates user with given uid with given attributes
     let updateUserById (uid: string) (attributes: AdminUserAttributes)
-                       (connection: GoTrueConnection): Result<User, GoTrueError> =
+                       (connection: GoTrueConnection): Async<Result<User, GoTrueError>> =
         let urlSuffix = $"admin/users/{uid}"
         
         let body = Json.serialize attributes
         let content = getStringContent body
         
-        let response = put urlSuffix None content connection
-        deserializeResponse<User> response
+        async {
+            let! response = put urlSuffix None content connection
+            return deserializeResponse<User> response
+        }
     
     /// Generates link
     let generateLink (email: string) (linkType: GenerateLinkType) (options: AuthOptions option) (password: string option)
-                     (data: Map<string, obj> option) (connection: GoTrueConnection): Result<User, GoTrueError> =
+                     (data: Map<string, obj> option) (connection: GoTrueConnection): Async<Result<User, GoTrueError>> =
         let body =
             Map<string, obj>[
                 "email", email

@@ -30,7 +30,8 @@ module AuthRequestCommon =
     /// Deserializes response with `deserializeWith` function.
     let performAuthRequest<'T> (body: Map<string, obj> option) (headers: Map<string, string> option) (urlParams: string list)
                                (pathSuffix: string) (options: AuthOptions option) (connection: GoTrueConnection)
-                               (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>): Result<'T, GoTrueError> =
+                               (deserializeWith: Result<HttpResponseMessage, GoTrueError> -> Result<'T, GoTrueError>)
+                               : Async<Result<'T, GoTrueError>> =
         try
             let serializedBody =
                 match body with
@@ -53,10 +54,12 @@ module AuthRequestCommon =
             let queryString = getUrlParamsString updatedUrlParams
             let urlSuffix = $"{pathSuffix}{queryString}"
             
-            let response = post urlSuffix headers content connection
-            deserializeWith response
+            async {
+                let! response = post urlSuffix headers content connection
+                return deserializeWith response
+            }
         with
             | :? System.NullReferenceException as ex ->
-                Error { message = ex.Message ; statusCode = None }
+                async { return Error { message = ex.Message ; statusCode = None } }
             | e ->
-                Error { message = e.Message ; statusCode = None }
+                async { return Error { message = e.Message ; statusCode = None } }
