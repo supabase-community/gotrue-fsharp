@@ -9,7 +9,7 @@ module Connection =
     let version = "0.0.1"
 
     /// Represents client info header with current version
-    let clientInfo = ("X-Client-Info", $"fsharp-client-v{version}")
+    let clientInfo = ("X-Client-Info", $"gotrue-client-v{version}")
     
     /// Represents base connection
     type GoTrueConnection = {
