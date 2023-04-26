@@ -10,7 +10,7 @@ let connection = goTrueConnection {
      )
 }
 
-let result = signInWithEmail "<email>" "<password>" None connection
+let result = connection |> signInWithEmail "<email>" "<password>" None |> Async.RunSynchronously
 match result with
 | Ok r    -> printf $"{r}"
 | Error e -> printfn $"{e}"
