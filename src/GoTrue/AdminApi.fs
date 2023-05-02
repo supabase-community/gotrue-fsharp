@@ -10,7 +10,6 @@ open GoTrue.Connection
 open GoTrue.Http
 
 /// Contains helper functions and types for `AdminApi.fs` module.
-[<AutoOpen>]
 module AdminApiHelpers =
     /// Represents user created by admin
     type AdminUserAttributes = {
@@ -60,6 +59,8 @@ module AdminApiHelpers =
 
         loop (linkType.ToString()) ""
         
+open AdminApiHelpers
+
 /// Contains functions for admin. Needs service_role key.
 /// Never expose your service_role key for public. Do not use on client side!
 [<AutoOpen>]
