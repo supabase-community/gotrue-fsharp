@@ -26,9 +26,7 @@ module Http =
             match response with
             | Ok r    -> Result.Ok (Json.deserialize<'T> (getResponseBody r))
             | Error e -> Result.Error e
-        with
-            | :? System.NullReferenceException as ex -> Error { message = ex.Message ; statusCode = None }
-            | _ -> Error { message = "Unexpected error" ; statusCode = None }
+        with e -> Error { message = e.Message ; statusCode = None }
         
     /// Deserializes empty (unit) response
     let deserializeEmptyResponse (response: Result<HttpResponseMessage, GoTrueError>): Result<unit, GoTrueError> =
