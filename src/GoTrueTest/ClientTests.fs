@@ -9,6 +9,8 @@ open Moq.Protected
 open Xunit
 open GoTrue
 open GoTrue.AuthRequestCommon
+open GoTrue.Common
+open GoTrue.Http
 
 [<Collection("signUp")>]
 module SignUpTests =

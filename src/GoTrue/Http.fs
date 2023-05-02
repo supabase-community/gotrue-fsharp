@@ -7,7 +7,6 @@ open GoTrue.Common
 open GoTrue.Connection
 
 /// Contains functions for performing http request and serialization/deserialization of data
-[<AutoOpen>]
 module Http =
     type GoTrueError = {
         message: string

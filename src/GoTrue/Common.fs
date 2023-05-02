@@ -6,7 +6,6 @@ open System.Text
 open FSharp.Json
 
 /// Contains shared helper functions and types
-[<AutoOpen>]
 module Common =
     /// Represents user type
     type User = {
