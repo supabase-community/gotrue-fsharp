@@ -8,6 +8,9 @@ open Moq
 open Moq.Protected
 open Xunit
 open GoTrue
+open GoTrue.Common
+open GoTrue.Http
+open GoTrue.AdminApiHelpers
 
 [<Collection("createUser")>]
 module CreateUserTests =
