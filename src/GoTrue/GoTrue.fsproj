@@ -1,19 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
+    <PackOnBuild>true</PackOnBuild>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>gotrue-fsharp</PackageId>
+    <Authors>Samuel Dubovec</Authors>
+    <Copyright>MIT</Copyright>
+    <ReleaseVersion>0.0.1</ReleaseVersion>
+    <PackageVersion>0.0.1</PackageVersion>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Owners>Samuel Dubovec &lt;samodubovec@gmail.com&gt;</Owners>
+    <Title>gotrue-fsharp</Title>
+    <Summary>A F# client for Supabase GoTrue</Summary>
+    <Description>A F# client for Supabase GoTrue</Description>
+    <PackageIcon>logo.jpeg</PackageIcon>
+    <PackageTags>supabase, functions, fsharp</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 
     <!-- FSharp.Formatting (fsdocs) start -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Authors>Samuel Dubovec</Authors>
-    <FsDocsLicenseLink>https://github.com/Samo8/gotrue-fsharp/blob/develop/LICENSE</FsDocsLicenseLink>
+    <Authors>Samuel Dubovec &lt;samodubovec@gmail.com&gt;</Authors>
+    <FsDocsLicenseLink>https://github.com/supabase-community/gotrue-fsharp/blob/develop/LICENSE</FsDocsLicenseLink>
     <FsDocsLogoSource>../content/img/logo.jpeg</FsDocsLogoSource>
     <PackageProjectUrl>..</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/Samo8/gotrue-fsharp</RepositoryUrl>
+    <RepositoryUrl>https://github.com/supabase-community/gotrue-fsharp</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/supabase-community/gotrue-fsharp</PackageProjectUrl>
     <RepositoryBranch>develop</RepositoryBranch>
     <UsesMarkdownComments>true</UsesMarkdownComments>
     <!-- FSharp.Formatting (fsdocs) end -->
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +49,11 @@
 
   <ItemGroup>
     <PackageReference Include="FSharp.Json" Version="0.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\docs\content\img\logo.jpeg" Pack="true" Link="logo.jpeg" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="true" Link="README.md" PackagePath="\" />
   </ItemGroup>
 
 </Project>
